@@ -1,5 +1,66 @@
 /* Add your Application JavaScript */
 // Instantiate our main Vue Instance
+const UploadForm = {
+    name: 'upload-form',
+    template:`
+    <h1>Upload Form</h1>
+    <div :class="[className]">
+        <ul>
+            <li v-for="message in messages">{{message}}</li>
+        </ul>
+    </div>
+    <form method="POST" id="uploadForm" @submit.prevent="uploadPhoto">
+        <div class="form-group">
+            <label for="description">Description</label>
+            <textarea type="text" name="description" class="form-control"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="photo">Photo Upload</label>
+            <input type="file" name="photo" id="photo" class="form-control" accept="image/*" draggable="true">
+        </div>
+        <button type="submit" class="btn btn-success">Submit</button>
+    </form>
+    `,
+    data(){
+        return {
+            messages:[],
+            className:''
+        }
+    },
+    methods: {
+        uploadPhoto(){
+            let self=this;
+            let uploadForm = document.getElementById('uploadForm');
+            let form_data = new FormData(uploadForm)
+
+            fetch("/api/upload",{
+            method: 'POST',
+            body: form_data,
+            headers: {
+                'X-CSRFToken': token
+            },
+            credentials:'same-origin'
+        })
+        .then(function(response){
+            return response.json();
+        })
+        .then(function(jsonResponse){
+            if (jsonResponse['successs']){
+                self.messages = [jsonResponse['successs']['message']];
+                self.className="uploaded"
+            } else {
+                self.messages = jsonResponse['errors']['errors'];
+                self.className="errors"
+            }
+            
+        })
+        .catch(function(error){
+            console.log(error);
+        });
+
+        }
+    }
+};
 const app = Vue.createApp({
     data() {
         return {
@@ -43,6 +104,7 @@ app.component('app-footer', {
         }
     }
 });
+
 
 const Home = {
     name: 'Home',
